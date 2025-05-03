@@ -16,6 +16,11 @@ class OrderRepository implements OrderRepositoryInterface
 
     public function update(Order $order, array $data): bool
     {
+//        $order = App\Models\Order::with('services')->find(1);
+//        foreach ($order->services as $service) {
+//            dd($service->pivot->quantity);
+//        };
+
         return $order->update($data);
     }
 }
