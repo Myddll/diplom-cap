@@ -12,11 +12,6 @@ services:
     working_dir: /var/www/app
     depends_on:
       - postgres
-    environment:
-      - POSTGRES_HOST=postgres
-      - POSTGRES_USER=${DB_USER:-postgres}
-      - POSTGRES_PASSWORD=${DB_PASSWORD:-postgres}
-      - POSTGRES_DB=${DB_NAME:-app}
 
   nginx:
     image: nginx:1.25
@@ -29,8 +24,6 @@ services:
       - ../:/var/www/app
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
     working_dir: /var/www/app
-    environment:
-      - NGINX_SERVER_NAME=${NGINX_SERVER_NAME:-localhost}
     depends_on:
       - php-fpm
 
