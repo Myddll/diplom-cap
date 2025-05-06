@@ -16,10 +16,10 @@ class UserController extends Controller
         return view('web.index', ['services' => Service::all()]);
     }
 
-    public function addOrder(CreateOrderRequest $request): Redirect
-    {
-        $data = $request->validated();
-
-
-    }
+//    public function addOrder(CreateOrderRequest $request): Redirect
+//    {
+//        $data = $request->validated();
+//
+//
+//    }
 }
