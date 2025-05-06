@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('client_tel');
             $table->string('client_address');
             $table->integer('status')->default(0);
+            $table->dateTime('order_date');
             $table->softDeletes();
             $table->timestamps();
         });
