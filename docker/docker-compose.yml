@@ -44,7 +44,7 @@ services:
 
   telegram-bot:
     build:
-      context: ./telegram-bot
+      context: ../telegram-bot
     container_name: telegram-bot
     restart: unless-stopped
     environment:
