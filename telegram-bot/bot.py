@@ -1,3 +1,5 @@
+import os
+import psycopg2
 import logging
 from telegram import (
     Update,
@@ -25,7 +27,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Токен вашего бота
-TOKEN = "7561126039:AAH6TrO__CKnjElKhk_M3j1rRPjQTpzffdI"
+TOKEN = os.getenv('TELEGRAM_TOKEN')
 
 # Состояния разговора
 (
@@ -335,7 +337,25 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return ConversationHandler.END
 
 
+def get_db_connection():
+    return psycopg2.connect(
+        host="postgres",  # имя сервиса в docker-compose
+        database=os.getenv('POSTGRES_DB'),
+        user=os.getenv('POSTGRES_USER'),
+        password=os.getenv('POSTGRES_PASSWORD')
+    )
+
 def main():
+    #подключаем бд
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT version();")
+        print("PostgreSQL version:", cursor.fetchone())
+    finally:
+        if conn:
+            conn.close()
+
     # Создаем приложение и передаем токен бота
     application = Application.builder().token(TOKEN).build()
 
@@ -370,6 +390,7 @@ def main():
 
     # Запускаем бота
     application.run_polling()
+#7561126039:Z5ztc28lD8AimtLJGx9I2wLpTm1
 
 
 if __name__ == "__main__":
