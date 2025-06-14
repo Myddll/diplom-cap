@@ -10,6 +10,8 @@ services:
     volumes:
       - ../:/var/www/app
     working_dir: /var/www/app
+    networks:
+      - app-network
     depends_on:
       - postgres
 
@@ -24,6 +26,8 @@ services:
       - ../:/var/www/app
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
     working_dir: /var/www/app
+    networks:
+      - app-network
     depends_on:
       - php-fpm
 
@@ -41,6 +45,8 @@ services:
         - postgres_data:/var/lib/postgresql/data
     ports:
         - "${DB_PORT}:5432"
+    networks:
+      - app-network
 
   telegram-bot:
     build:
@@ -55,7 +61,11 @@ services:
     depends_on:
       - postgres
     networks:
-      - default
+      - app-network
 
 volumes:
   postgres_data:
+
+networks:
+  app-network:
+    driver: bridge
