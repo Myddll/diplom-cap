@@ -273,6 +273,14 @@
 
                 <h2>Дополнительные услуги</h2>
                 <div class="checkbox-group" id="extraServices">
+                    @php
+                        $extras = [
+                        (object)['id' => 1, 'name' => 'Мойка окон', 'price' => 1500, 'time' => 60],
+                        (object)['id' => 2, 'name' => 'Чистка холодильника', 'price' => 1200, 'time' => 45],
+                        (object)['id' => 3, 'name' => 'Чистка духовки', 'price' => 1000, 'time' => 30],
+                        (object)['id' => 4, 'name' => 'Глажка белья', 'price' => 800, 'time' => 40],
+                        ];
+                    @endphp
                     @foreach($extras as $extra)
                         <div class="checkbox-item">
                             <label>
