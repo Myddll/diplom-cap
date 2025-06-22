@@ -30,6 +30,7 @@ class Order extends Model
         'client_info',
         'client_tel',
         'client_address',
+        'order_comment',
     ];
 
     public function services(): BelongsToMany

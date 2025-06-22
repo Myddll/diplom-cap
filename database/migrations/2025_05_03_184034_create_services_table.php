@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name', 255);
             $table->string('description')->nullable();
             $table->decimal('price');
-            $table->decimal('time', 4);
+            $table->integer('time');
             $table->boolean('is_multiple')->default(false);
             $table->timestamps();
         });
