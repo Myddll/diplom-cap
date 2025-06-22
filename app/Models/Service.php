@@ -14,6 +14,7 @@ class Service extends Model
         'description',
         'price',
         'time',
+        'is_primary_service',
         'is_multiple',
     ];
 

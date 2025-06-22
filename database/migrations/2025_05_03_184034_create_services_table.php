@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('description')->nullable();
             $table->decimal('price');
             $table->integer('time');
+            $table->boolean('is_primary_service')->default(false);
             $table->boolean('is_multiple')->default(false);
             $table->timestamps();
         });

@@ -24,12 +24,21 @@ class TestSeeder extends Seeder
         $secondTestModelService = Service::query()->create([
             'name' => 'Чистка квартиры',
             'description' => 'Чистка квартиры - описание',
+            'is_primary_service' => true,
+            'is_multiple' => true,
             'price' => 123.23,
             'time' => 60,
         ]);
         $thirdTestModelService = Service::query()->create([
             'name' => 'Мытье посуды',
             'description' => 'Мытье посуды - описание',
+            'price' => 123.23,
+            'time' => 60,
+        ]);
+        $fourthTestModelService = Service::query()->create([
+            'name' => 'Мытье посуды основная',
+            'description' => 'Мытье посуды основная - описание',
+            'is_primary_service' => true,
             'price' => 123.23,
             'time' => 60,
         ]);

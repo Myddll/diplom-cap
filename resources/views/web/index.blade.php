@@ -16,14 +16,14 @@
             --gray: #6b7280;
             --border: #e5e7eb;
         }
-        * { 
-            box-sizing: border-box; 
+        * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background-color: var(--light); 
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--light);
             color: var(--dark);
             line-height: 1.6;
         }
@@ -53,18 +53,18 @@
         .logo i {
             margin-right: 10px;
         }
-        .form-container { 
-            background-color: #fff; 
-            width: 100%; 
-            padding: 40px; 
-            border-radius: 16px; 
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05); 
+        .form-container {
+            background-color: #fff;
+            width: 100%;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
             margin-bottom: 40px;
         }
-        h1 { 
-            text-align: center; 
-            font-size: 28px; 
-            margin-bottom: 30px; 
+        h1 {
+            text-align: center;
+            font-size: 28px;
+            margin-bottom: 30px;
             color: var(--dark);
             font-weight: 700;
         }
@@ -74,25 +74,25 @@
             color: var(--dark);
             font-weight: 600;
         }
-        label { 
-            font-weight: 500; 
-            display: block; 
-            margin-bottom: 8px; 
-            color: var(--dark); 
+        label {
+            font-weight: 500;
+            display: block;
+            margin-bottom: 8px;
+            color: var(--dark);
         }
-        select, input, textarea { 
-            width: 100%; 
-            padding: 14px; 
-            margin-bottom: 20px; 
-            border: 1px solid var(--border); 
-            border-radius: 10px; 
-            background: white; 
-            font-size: 16px; 
-            transition: all 0.3s; 
+        select, input, textarea {
+            width: 100%;
+            padding: 14px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: white;
+            font-size: 16px;
+            transition: all 0.3s;
         }
-        select:focus, input:focus, textarea:focus { 
-            border-color: var(--primary); 
-            outline: none; 
+        select:focus, input:focus, textarea:focus {
+            border-color: var(--primary);
+            outline: none;
             box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
         }
         .form-grid {
@@ -100,8 +100,8 @@
             grid-template-columns: 1fr 1fr;
             gap: 20px;
         }
-        .checkbox-group { 
-            margin-bottom: 20px; 
+        .checkbox-group {
+            margin-bottom: 20px;
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 15px;
@@ -116,15 +116,15 @@
         .checkbox-item:hover {
             border-color: var(--primary);
         }
-        .checkbox-item label { 
-            display: flex; 
-            align-items: center; 
-            font-weight: 400; 
-            margin-bottom: 0; 
+        .checkbox-item label {
+            display: flex;
+            align-items: center;
+            font-weight: 400;
+            margin-bottom: 0;
             cursor: pointer;
         }
-        .checkbox-item input[type="checkbox"] { 
-            margin-right: 12px; 
+        .checkbox-item input[type="checkbox"] {
+            margin-right: 12px;
             width: 18px;
             height: 18px;
             accent-color: var(--primary);
@@ -162,23 +162,23 @@
             padding-top: 10px;
             margin-top: 10px;
         }
-        button { 
-            background-color: var(--primary); 
-            color: white; 
-            padding: 16px; 
-            width: 100%; 
-            font-size: 16px; 
+        button {
+            background-color: var(--primary);
+            color: white;
+            padding: 16px;
+            width: 100%;
+            font-size: 16px;
             font-weight: 600;
-            border: none; 
-            border-radius: 10px; 
-            cursor: pointer; 
-            transition: background-color 0.3s; 
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s;
             display: flex;
             align-items: center;
             justify-content: center;
         }
-        button:hover { 
-            background-color: var(--primary-hover); 
+        button:hover {
+            background-color: var(--primary-hover);
         }
         button i {
             margin-right: 10px;
@@ -233,128 +233,108 @@
         </div>
     </header>
 
-    <div class="container">
-        <div class="form-container">
-            <h1><i class="fas fa-broom"></i> Заказ уборки</h1>
-            
-            <form id="orderForm">
-                <h2>Тип помещения</h2>
-                <select id="propertyType" required>
-                    <option value="">Выберите тип помещения</option>
-                    <option value="apartment">Квартира</option>
-                    <option value="house">Дом</option>
-                    <option value="office">Офис</option>
-                    <option value="cottage">Коттедж</option>
-                </select>
+    <div class="form-container">
+        <h1><i class="fas fa-broom"></i> Заказ уборки</h1>
 
-                <div class="form-grid">
+        <form id="orderForm">
+            <h2>Основные услуги</h2>
+
+            <div class="form-grid" id="mainServices">
+                @foreach(\App\Models\Service::query()->where('is_primary_service', '=', true)->get() as $service)
+                    <h3>{{ $service->name }}</h3>
                     <div>
-                        <label for="area">Площадь (м²)</label>
-                        <input type="number" id="area" min="20" max="500" required>
+                        @if($service->is_multiple)
+                            <label for="service_{{ $service->id }}">Количество</label>
+                            <input type="number" id="service_{{ $service->id }}" min="1" max="500"
+                                   data-price="{{ $service->price }}" data-time="{{ $service->time }}"
+                                   class="quantity-input" value="1">
+                        @else
+                            <input type="checkbox" id="service_{{ $service->id }}"
+                                   data-price="{{ $service->price }}" data-time="{{ $service->time }}">
+                        @endif
                     </div>
-                    <div>
-                        <label for="rooms">Количество комнат</label>
-                        <input type="number" id="rooms" min="1" max="20" required>
-                    </div>
-                </div>
+                @endforeach
+            </div>
 
-                <h2>Основные услуги</h2>
-                <div class="checkbox-group" id="mainServices">
-                    @foreach($services as $service)
-                        <div class="checkbox-item">
-                            <label>
-                                <input type="checkbox" name="services[]" value="{{ $service->id }}" data-price="{{ $service->price }}" data-time="{{ $service->time }}"/>
-                                <span class="service-name">{{ $service->name }}</span>
-                                <span class="service-price">{{ $service->price }} ₽</span>
-                            </label>
-                        </div>
-                    @endforeach
-                </div>
-
-                <h2>Дополнительные услуги</h2>
-                <div class="checkbox-group" id="extraServices">
-                    @php
-                        $extras = [
-                        (object)['id' => 1, 'name' => 'Мойка окон', 'price' => 1500, 'time' => 60],
-                        (object)['id' => 2, 'name' => 'Чистка холодильника', 'price' => 1200, 'time' => 45],
-                        (object)['id' => 3, 'name' => 'Чистка духовки', 'price' => 1000, 'time' => 30],
-                        (object)['id' => 4, 'name' => 'Глажка белья', 'price' => 800, 'time' => 40],
-                        ];
-                    @endphp
-                    @foreach($extras as $extra)
-                        <div class="checkbox-item">
-                            <label>
-                                <input type="checkbox" name="extras[]" value="{{ $extra->id }}" data-price="{{ $extra->price }}" data-time="{{ $extra->time }}"/>
+            <h2>Дополнительные услуги</h2>
+            <div class="checkbox-group" id="extraServices">
+                @foreach(\App\Models\Service::query()->where('is_primary_service', '=', false)->get() as $extra)
+                    <div class="checkbox-item">
+                        <label>
+                            @if($extra->is_multiple)
+                                <span class="service-name">{{ $extra->name }}</span>
+                                <input type="number" name="extras[]" value="1" min="1" max="100"
+                                       data-price="{{ $extra->price }}" data-time="{{ $extra->time }}"
+                                       class="extra-quantity" style="width: 60px; margin-left: 10px;">
+                                <span class="service-price">{{ $extra->price }} ₽/ед.</span>
+                            @else
+                                <input type="checkbox" name="extras[]" value="{{ $extra->id }}"
+                                       data-price="{{ $extra->price }}" data-time="{{ $extra->time }}"/>
                                 <span class="service-name">{{ $extra->name }}</span>
                                 <span class="service-price">{{ $extra->price }} ₽</span>
-                            </label>
-                        </div>
-                    @endforeach
-                </div>
-
-                <h2>Когда приехать?</h2>
-                <div class="form-grid">
-                    <div>
-                        <label for="date">Дата</label>
-                        <input type="date" id="date" required min="{{ date('Y-m-d') }}">
+                            @endif
+                        </label>
                     </div>
-                    <div>
-                        <label for="time">Время</label>
-                        <input type="time" id="time" required min="09:00" max="20:00">
-                    </div>
-                </div>
-
-                <h2>Контактные данные</h2>
-                <div class="form-grid">
-                    <div>
-                        <label for="name">Ваше имя</label>
-                        <input type="text" id="name" placeholder="Иван Иванов" required>
-                    </div>
-                    <div>
-                        <label for="phone">Телефон</label>
-                        <input type="tel" id="phone" placeholder="+7 (___) ___-__-__" required>
-                    </div>
-                </div>
-
-                <label for="comments">Комментарий (необязательно)</label>
-                <textarea id="comments" rows="3" placeholder="Особенности помещения, дополнительные пожелания..."></textarea>
-
-                <div class="total-container">
-                    <div class="total-row">
-                        <span class="total-label">Стоимость услуг:</span>
-                        <span class="total-value" id="servicesTotal">0 ₽</span>
-                    </div>
-                    <div class="total-row">
-                        <span class="total-label">Дополнительные услуги:</span>
-                        <span class="total-value" id="extrasTotal">0 ₽</span>
-                    </div>
-                    <div class="total-row final-total">
-                        <span class="total-label">Итого:</span>
-                        <span class="total-value" id="finalTotal">0 ₽</span>
-                    </div>
-                    <div class="total-row">
-                        <span class="total-label">Примерное время уборки:</span>
-                        <span class="total-value" id="totalTime">—</span>
-                    </div>
-                </div>
-
-                <button type="submit" id="submitBtn">
-                    <i class="fas fa-check-circle"></i> Подтвердить заказ
-                </button>
-            </form>
-
-            <div class="summary-card" id="summaryCard">
-                <h3><i class="fas fa-receipt"></i> Ваш заказ</h3>
-                <div id="orderSummary"></div>
+                @endforeach
             </div>
+
+            <!-- Остальная часть формы без изменений -->
+            <h2>Когда приехать?</h2>
+            <div class="form-grid">
+                <div>
+                    <label for="date">Дата</label>
+                    <input type="date" id="date" required min="{{ date('Y-m-d') }}">
+                </div>
+                <div>
+                    <label for="time">Время</label>
+                    <input type="time" id="time" required min="09:00" max="20:00">
+                </div>
+            </div>
+
+            <h2>Контактные данные</h2>
+            <div class="form-grid">
+                <div>
+                    <label for="name">Ваше имя</label>
+                    <input type="text" id="name" placeholder="Иван Иванов" required>
+                </div>
+                <div>
+                    <label for="phone">Телефон</label>
+                    <input type="tel" id="phone" placeholder="+7 (___) ___-__-__" required>
+                </div>
+            </div>
+
+            <label for="comments">Комментарий (необязательно)</label>
+            <textarea id="comments" rows="3" placeholder="Особенности помещения, дополнительные пожелания..."></textarea>
+
+            <div class="total-container">
+                <div class="total-row">
+                    <span class="total-label">Стоимость услуг:</span>
+                    <span class="total-value" id="servicesTotal">0 ₽</span>
+                </div>
+                <div class="total-row">
+                    <span class="total-label">Дополнительные услуги:</span>
+                    <span class="total-value" id="extrasTotal">0 ₽</span>
+                </div>
+                <div class="total-row final-total">
+                    <span class="total-label">Итого:</span>
+                    <span class="total-value" id="finalTotal">0 ₽</span>
+                </div>
+                <div class="total-row">
+                    <span class="total-label">Примерное время уборки:</span>
+                    <span class="total-value" id="totalTime">—</span>
+                </div>
+            </div>
+
+            <button type="submit" id="submitBtn">
+                <i class="fas fa-check-circle"></i> Подтвердить заказ
+            </button>
+        </form>
+
+        <div class="summary-card" id="summaryCard">
+            <h3><i class="fas fa-receipt"></i> Ваш заказ</h3>
+            <div id="orderSummary"></div>
         </div>
     </div>
-
-    <footer class="footer">
-        <div class="container">
-            <p>© 2023 CleanHouse. Все права защищены.</p>
-        </div>
-    </footer>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -372,34 +352,56 @@
                 let totalTime = 0;
 
                 // Основные услуги
-                document.querySelectorAll('#mainServices input[type="checkbox"]:checked').forEach(checkbox => {
-                    servicesTotal += parseInt(checkbox.dataset.price);
-                    totalTime += parseInt(checkbox.dataset.time) || 0;
+                document.querySelectorAll('#mainServices > div').forEach(serviceDiv => {
+                    const checkbox = serviceDiv.querySelector('input[type="checkbox"]');
+                    const quantityInput = serviceDiv.querySelector('input[type="number"]');
+
+                    if (checkbox && checkbox.checked) {
+                        const price = parseFloat(checkbox.dataset.price) || 0;
+                        const time = parseInt(checkbox.dataset.time) || 0;
+                        servicesTotal += price;
+                        totalTime += time;
+                    }
+
+                    if (quantityInput) {
+                        const quantity = parseInt(quantityInput.value) || 0;
+                        const price = parseFloat(quantityInput.dataset.price) || 0;
+                        const time = parseInt(quantityInput.dataset.time) || 0;
+                        servicesTotal += price * quantity;
+                        totalTime += time * quantity;
+                    }
                 });
 
                 // Дополнительные услуги
-                document.querySelectorAll('#extraServices input[type="checkbox"]:checked').forEach(checkbox => {
-                    extrasTotal += parseInt(checkbox.dataset.price);
-                    totalTime += parseInt(checkbox.dataset.time) || 0;
-                });
+                document.querySelectorAll('#extraServices .checkbox-item').forEach(extraItem => {
+                    const checkbox = extraItem.querySelector('input[type="checkbox"]');
+                    const quantityInput = extraItem.querySelector('input[type="number"]');
 
-                // Учет площади (базовая цена увеличивается на 10% за каждые 20 м² сверх 50 м²)
-                const area = parseInt(document.getElementById('area').value) || 0;
-                if (area > 50) {
-                    const extraArea = area - 50;
-                    const multiplier = Math.ceil(extraArea / 20);
-                    servicesTotal = servicesTotal * (1 + multiplier * 0.1);
-                }
+                    if (checkbox && checkbox.checked) {
+                        const price = parseFloat(checkbox.dataset.price) || 0;
+                        const time = parseInt(checkbox.dataset.time) || 0;
+                        extrasTotal += price;
+                        totalTime += time;
+                    }
+
+                    if (quantityInput) {
+                        const quantity = parseInt(quantityInput.value) || 0;
+                        const price = parseFloat(quantityInput.dataset.price) || 0;
+                        const time = parseInt(quantityInput.dataset.time) || 0;
+                        extrasTotal += price * quantity;
+                        totalTime += time * quantity;
+                    }
+                });
 
                 // Обновление UI
                 document.getElementById('servicesTotal').textContent = Math.round(servicesTotal) + ' ₽';
                 document.getElementById('extrasTotal').textContent = Math.round(extrasTotal) + ' ₽';
                 document.getElementById('finalTotal').textContent = Math.round(servicesTotal + extrasTotal) + ' ₽';
-                
+
                 if (totalTime > 0) {
                     const hours = Math.floor(totalTime / 60);
                     const minutes = totalTime % 60;
-                    document.getElementById('totalTime').textContent = 
+                    document.getElementById('totalTime').textContent =
                         (hours > 0 ? hours + ' ч ' : '') + (minutes > 0 ? minutes + ' мин' : '');
                 } else {
                     document.getElementById('totalTime').textContent = '—';
@@ -407,18 +409,19 @@
             }
 
             // Слушатели изменений
-            document.querySelectorAll('input[type="checkbox"], #area').forEach(element => {
+            document.querySelectorAll('input[type="checkbox"], input[type="number"]').forEach(element => {
                 element.addEventListener('change', calculateTotal);
+                element.addEventListener('input', calculateTotal);
             });
 
             // Обработка отправки формы
             document.getElementById('orderForm').addEventListener('submit', function(e) {
                 e.preventDefault();
-                
+
                 // Валидация
-                if (!document.getElementById('name').value || 
-                    !document.getElementById('phone').value || 
-                    !document.getElementById('date').value || 
+                if (!document.getElementById('name').value ||
+                    !document.getElementById('phone').value ||
+                    !document.getElementById('date').value ||
                     !document.getElementById('time').value) {
                     alert('Пожалуйста, заполните все обязательные поля');
                     return;
@@ -442,7 +445,7 @@
 
                 // Показ сводки
                 showOrderSummary(formData);
-                
+
                 // Здесь можно добавить отправку данных на сервер через AJAX
                 // axios.post('/order', formData)...
             });
@@ -450,37 +453,37 @@
             // Показать сводку заказа
             function showOrderSummary(data) {
                 let summaryHTML = '';
-                
+
                 summaryHTML += `<div class="summary-item"><span>Тип помещения:</span> <span>${getPropertyTypeName(data.propertyType)}</span></div>`;
                 summaryHTML += `<div class="summary-item"><span>Площадь:</span> <span>${data.area} м²</span></div>`;
                 summaryHTML += `<div class="summary-item"><span>Комнат:</span> <span>${data.rooms}</span></div>`;
-                
+
                 if (data.services.length > 0) {
                     summaryHTML += `<div class="summary-item"><span>Основные услуги:</span> <span>${data.services.length}</span></div>`;
                 }
-                
+
                 if (data.extras.length > 0) {
                     summaryHTML += `<div class="summary-item"><span>Доп. услуги:</span> <span>${data.extras.length}</span></div>`;
                 }
-                
+
                 summaryHTML += `<div class="summary-item"><span>Дата и время:</span> <span>${formatDate(data.date)} в ${data.time}</span></div>`;
                 summaryHTML += `<div class="summary-item"><span>Контактное лицо:</span> <span>${data.name}</span></div>`;
                 summaryHTML += `<div class="summary-item"><span>Телефон:</span> <span>${data.phone}</span></div>`;
-                
+
                 if (data.comments) {
                     summaryHTML += `<div class="summary-item"><span>Комментарий:</span> <span>${data.comments}</span></div>`;
                 }
-                
+
                 summaryHTML += `<div class="summary-item" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border);">
                     <span style="font-weight: 600;">Итого:</span> <span style="font-weight: 600; color: var(--primary);">${data.total}</span>
                 </div>`;
-                
+
                 document.getElementById('orderSummary').innerHTML = summaryHTML;
                 document.getElementById('summaryCard').style.display = 'block';
-                
+
                 // Прокрутка к сводке
                 document.getElementById('summaryCard').scrollIntoView({ behavior: 'smooth' });
-                
+
                 // Изменение кнопки
                 document.getElementById('submitBtn').innerHTML = '<i class="fas fa-check-circle"></i> Заказ оформлен!';
                 document.getElementById('submitBtn').style.backgroundColor = 'var(--secondary)';
