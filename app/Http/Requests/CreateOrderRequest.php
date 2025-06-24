@@ -42,7 +42,7 @@ class CreateOrderRequest extends FormRequest
     {
         $time = Carbon::parse($value);
 
-        if ($time->isNowOrPast() || $time->isToday()) {
+        if ($time->isPast() || $time->isToday()) {
             return $fail('Неправильная дата');
         }
     }

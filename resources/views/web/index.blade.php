@@ -245,12 +245,13 @@
                     <div>
                         @if($service->is_multiple)
                             <label for="service_{{ $service->id }}">Количество</label>
-                            <input type="number" id="service_{{ $service->id }}" min="1" max="500"
+                            <input type="number" id="service_{{ $service->id }}" min="0" max="500"
                                    data-price="{{ $service->price }}" data-time="{{ $service->time }}"
-                                   class="quantity-input" value="1">
+                                   class="quantity-input" value="0" data-service-id="{{ $service->id }}">
                         @else
                             <input type="checkbox" id="service_{{ $service->id }}"
-                                   data-price="{{ $service->price }}" data-time="{{ $service->time }}">
+                                   data-price="{{ $service->price }}" data-time="{{ $service->time }}"
+                                   data-service-id="{{ $service->id }}">
                         @endif
                     </div>
                 @endforeach
@@ -263,13 +264,15 @@
                         <label>
                             @if($extra->is_multiple)
                                 <span class="service-name">{{ $extra->name }}</span>
-                                <input type="number" name="extras[]" value="1" min="1" max="100"
+                                <input type="number" name="extras[]" value="0" min="0" max="100"
                                        data-price="{{ $extra->price }}" data-time="{{ $extra->time }}"
-                                       class="extra-quantity" style="width: 60px; margin-left: 10px;">
+                                       class="extra-quantity" style="width: 60px; margin-left: 10px;"
+                                       data-service-id="{{ $extra->id }}">
                                 <span class="service-price">{{ $extra->price }} ₽/ед.</span>
                             @else
                                 <input type="checkbox" name="extras[]" value="{{ $extra->id }}"
-                                       data-price="{{ $extra->price }}" data-time="{{ $extra->time }}"/>
+                                       data-price="{{ $extra->price }}" data-time="{{ $extra->time }}"
+                                       data-service-id="{{ $extra->id }}"/>
                                 <span class="service-name">{{ $extra->name }}</span>
                                 <span class="service-price">{{ $extra->price }} ₽</span>
                             @endif
@@ -278,12 +281,11 @@
                 @endforeach
             </div>
 
-            <!-- Остальная часть формы без изменений -->
             <h2>Когда приехать?</h2>
             <div class="form-grid">
                 <div>
                     <label for="date">Дата</label>
-                    <input type="date" id="date" required min="{{ date('Y-m-d') }}">
+                    <input type="date" id="date" required min="{{ \Carbon\Carbon::tomorrow()->format('Y-m-d') }}">
                 </div>
                 <div>
                     <label for="time">Время</label>
@@ -330,13 +332,21 @@
             </button>
         </form>
 
-        <div class="summary-card" id="summaryCard">
+        <div class="summary-card" id="summaryCard" style="display: none;">
             <h3><i class="fas fa-receipt"></i> Ваш заказ</h3>
             <div id="orderSummary"></div>
+        </div>
+
+        <div id="errorBlock" class="error-block" style="display: none; background-color: #ffebee; color: #c62828; padding: 15px; border-radius: 5px; margin-top: 20px;">
+            Ошибка валидации
         </div>
     </div>
 
     <script>
+        function formatPhoneForApi(phone) {
+            return '+7' + phone.replace(/\D/g, '').substring(1);
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             // Маска для телефона
             const phoneInput = document.getElementById('phone');
@@ -418,92 +428,217 @@
             document.getElementById('orderForm').addEventListener('submit', function(e) {
                 e.preventDefault();
 
+                // Скрываем предыдущие сообщения
+                document.getElementById('summaryCard').style.display = 'none';
+                document.getElementById('errorBlock').style.display = 'none';
+
                 // Валидация
                 if (!document.getElementById('name').value ||
                     !document.getElementById('phone').value ||
                     !document.getElementById('date').value ||
                     !document.getElementById('time').value) {
-                    alert('Пожалуйста, заполните все обязательные поля');
+                    showError('Пожалуйста, заполните все обязательные поля');
                     return;
                 }
 
-                // Сбор данных
+                // Сбор данных для API
                 const formData = {
-                    propertyType: document.getElementById('propertyType').value,
-                    area: document.getElementById('area').value,
-                    rooms: document.getElementById('rooms').value,
-                    services: Array.from(document.querySelectorAll('#mainServices input[type="checkbox"]:checked')).map(el => el.value),
-                    extras: Array.from(document.querySelectorAll('#extraServices input[type="checkbox"]:checked')).map(el => el.value),
-                    date: document.getElementById('date').value,
-                    time: document.getElementById('time').value,
-                    name: document.getElementById('name').value,
-                    phone: document.getElementById('phone').value,
-                    comments: document.getElementById('comments').value,
-                    total: document.getElementById('finalTotal').textContent,
-                    timeNeeded: document.getElementById('totalTime').textContent
+                    client_info: document.getElementById('name').value,
+                    client_tel: formatPhoneForApi(document.getElementById('phone').value),
+                    client_address: "ул. Пушкинна д. колотушкина кв. 1", // Здесь можно добавить поле адреса, если нужно
+                    order_comment: document.getElementById('comments').value,
+                    order_date: document.getElementById('date').value + ' ' + document.getElementById('time').value,
+                    services: []
                 };
 
-                // Показ сводки
-                showOrderSummary(formData);
+                // Собираем основные услуги
+                document.querySelectorAll('#mainServices input').forEach(input => {
+                    const serviceId = input.dataset.serviceId;
 
-                // Здесь можно добавить отправку данных на сервер через AJAX
-                // axios.post('/order', formData)...
+                    if (input.type === 'checkbox' && input.checked) {
+                        formData.services.push({
+                            id: parseInt(serviceId),
+                            quantity: 1
+                        });
+                    } else if (input.type === 'number' && parseInt(input.value) > 0) {
+                        formData.services.push({
+                            id: parseInt(serviceId),
+                            quantity: parseInt(input.value)
+                        });
+                    }
+                });
+
+                // Собираем дополнительные услуги
+                document.querySelectorAll('#extraServices input').forEach(input => {
+                    const serviceId = input.dataset.serviceId;
+
+                    if (input.type === 'checkbox' && input.checked) {
+                        formData.services.push({
+                            id: parseInt(serviceId),
+                            quantity: 1
+                        });
+                    } else if (input.type === 'number' && parseInt(input.value) > 0) {
+                        formData.services.push({
+                            id: parseInt(serviceId),
+                            quantity: parseInt(input.value)
+                        });
+                    }
+                });
+
+                // Проверка, что выбрана хотя бы одна услуга
+                if (formData.services.length === 0) {
+                    showError('Пожалуйста, выберите хотя бы одну услугу');
+                    return;
+                }
+
+                // Отправка данных на сервер
+                sendOrderData(formData);
             });
 
+            // Функция отправки данных на сервер
+            function sendOrderData(data) {
+                const submitBtn = document.getElementById('submitBtn');
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Отправка...';
+
+                fetch('/api/newOrder', { // Замените на ваш API endpoint
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().then(err => { throw err; });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        // Успешный ответ
+                        showOrderSummary(data);
+                        submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> Заказ оформлен!';
+                        submitBtn.style.backgroundColor = 'var(--secondary)';
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showError(error.message || 'Ошибка валидации');
+                        submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> Подтвердить заказ';
+                        submitBtn.disabled = false;
+                    });
+            }
+
+            // Показать ошибку
+            function showError(message) {
+                const errorBlock = document.getElementById('errorBlock');
+                errorBlock.textContent = message;
+                errorBlock.style.display = 'block';
+                errorBlock.scrollIntoView({ behavior: 'smooth' });
+            }
+
             // Показать сводку заказа
-            function showOrderSummary(data) {
+            function showOrderSummary(isSuccess) {
                 let summaryHTML = '';
 
-                summaryHTML += `<div class="summary-item"><span>Тип помещения:</span> <span>${getPropertyTypeName(data.propertyType)}</span></div>`;
-                summaryHTML += `<div class="summary-item"><span>Площадь:</span> <span>${data.area} м²</span></div>`;
-                summaryHTML += `<div class="summary-item"><span>Комнат:</span> <span>${data.rooms}</span></div>`;
-
-                if (data.services.length > 0) {
-                    summaryHTML += `<div class="summary-item"><span>Основные услуги:</span> <span>${data.services.length}</span></div>`;
+                // Если заказ не создан, показываем ошибку
+                if (!isSuccess) {
+                    showError('Не удалось создать заказ');
+                    return;
                 }
 
-                if (data.extras.length > 0) {
-                    summaryHTML += `<div class="summary-item"><span>Доп. услуги:</span> <span>${data.extras.length}</span></div>`;
+                // Получаем данные из формы
+                const name = document.getElementById('name').value;
+                const phone = document.getElementById('phone').value;
+                const comments = document.getElementById('comments').value;
+                const orderDate = document.getElementById('date').value;
+                const orderTime = document.getElementById('time').value;
+
+                // Форматируем дату и время
+                const formattedDate = new Date(orderDate).toLocaleDateString('ru-RU', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
+                });
+
+                // Основная информация
+                summaryHTML += `<div class="summary-item"><span>Клиент:</span> <span>${name}</span></div>`;
+                summaryHTML += `<div class="summary-item"><span>Телефон:</span> <span>${phone}</span></div>`;
+                summaryHTML += `<div class="summary-item"><span>Дата и время:</span> <span>${formattedDate} в ${orderTime}</span></div>`;
+
+                // Комментарий
+                if (comments) {
+                    summaryHTML += `<div class="summary-item"><span>Комментарий:</span> <span>${comments}</span></div>`;
                 }
 
-                summaryHTML += `<div class="summary-item"><span>Дата и время:</span> <span>${formatDate(data.date)} в ${data.time}</span></div>`;
-                summaryHTML += `<div class="summary-item"><span>Контактное лицо:</span> <span>${data.name}</span></div>`;
-                summaryHTML += `<div class="summary-item"><span>Телефон:</span> <span>${data.phone}</span></div>`;
+                // Собираем информацию об услугах
+                const services = [];
 
-                if (data.comments) {
-                    summaryHTML += `<div class="summary-item"><span>Комментарий:</span> <span>${data.comments}</span></div>`;
+                // Основные услуги
+                document.querySelectorAll('#mainServices input').forEach(input => {
+                    const serviceId = input.dataset.serviceId;
+                    const serviceName = input.closest('div').previousElementSibling.textContent;
+
+                    if (input.type === 'checkbox' && input.checked) {
+                        services.push({
+                            id: serviceId,
+                            name: serviceName,
+                            price: parseFloat(input.dataset.price) || 0,
+                            quantity: 1
+                        });
+                    } else if (input.type === 'number' && parseInt(input.value) > 0) {
+                        services.push({
+                            id: serviceId,
+                            name: serviceName,
+                            price: parseFloat(input.dataset.price) || 0,
+                            quantity: parseInt(input.value)
+                        });
+                    }
+                });
+
+                // Дополнительные услуги
+                document.querySelectorAll('#extraServices input').forEach(input => {
+                    const serviceId = input.dataset.serviceId;
+                    const serviceName = input.closest('label').querySelector('.service-name').textContent;
+
+                    if (input.type === 'checkbox' && input.checked) {
+                        services.push({
+                            id: serviceId,
+                            name: serviceName,
+                            price: parseFloat(input.dataset.price) || 0,
+                            quantity: 1
+                        });
+                    } else if (input.type === 'number' && parseInt(input.value) > 0) {
+                        services.push({
+                            id: serviceId,
+                            name: serviceName,
+                            price: parseFloat(input.dataset.price) || 0,
+                            quantity: parseInt(input.value)
+                        });
+                    }
+                });
+
+                // Выводим услуги
+                if (services.length > 0) {
+                    summaryHTML += `<div class="summary-item" style="margin-top: 10px;"><span style="font-weight: 600;">Услуги:</span></div>`;
+
+                    services.forEach(service => {
+                        summaryHTML += `<div class="summary-item" style="padding-left: 15px;">
+                <span>${service.name}:</span>
+                <span>${service.quantity} × ${service.price} ₽ = ${service.quantity * service.price} ₽</span>
+            </div>`;
+                    });
+
+                    // Итоговая стоимость
+                    const total = services.reduce((sum, service) => sum + (service.price * service.quantity), 0);
+                    summaryHTML += `<div class="summary-item" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border);">
+            <span style="font-weight: 600;">Итого:</span> <span style="font-weight: 600; color: var(--primary);">${total} ₽</span>
+        </div>`;
                 }
-
-                summaryHTML += `<div class="summary-item" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border);">
-                    <span style="font-weight: 600;">Итого:</span> <span style="font-weight: 600; color: var(--primary);">${data.total}</span>
-                </div>`;
 
                 document.getElementById('orderSummary').innerHTML = summaryHTML;
                 document.getElementById('summaryCard').style.display = 'block';
-
-                // Прокрутка к сводке
                 document.getElementById('summaryCard').scrollIntoView({ behavior: 'smooth' });
-
-                // Изменение кнопки
-                document.getElementById('submitBtn').innerHTML = '<i class="fas fa-check-circle"></i> Заказ оформлен!';
-                document.getElementById('submitBtn').style.backgroundColor = 'var(--secondary)';
-                document.getElementById('submitBtn').disabled = true;
-            }
-
-            // Вспомогательные функции
-            function getPropertyTypeName(type) {
-                const types = {
-                    'apartment': 'Квартира',
-                    'house': 'Дом',
-                    'office': 'Офис',
-                    'cottage': 'Коттедж'
-                };
-                return types[type] || type;
-            }
-
-            function formatDate(dateString) {
-                const options = { day: 'numeric', month: 'long', year: 'numeric' };
-                return new Date(dateString).toLocaleDateString('ru-RU', options);
             }
         });
     </script>
