@@ -19,10 +19,10 @@ class Order extends Model
         self::CANCELED_STATUS_CODE,
     ];
 
-    private const CREATED_STATUS_CODE = 0;
-    private const IN_WORK_STATUS_CODE = 1;
-    private const COMPLETE_STATUS_CODE = 2;
-    private const CANCELED_STATUS_CODE = 3;
+    public const CREATED_STATUS_CODE = 0;
+    public const IN_WORK_STATUS_CODE = 1;
+    public const COMPLETE_STATUS_CODE = 2;
+    public const CANCELED_STATUS_CODE = 3;
 
     use SoftDeletes;
 
@@ -31,6 +31,8 @@ class Order extends Model
         'client_tel',
         'client_address',
         'order_comment',
+        'order_date',
+        'status',
     ];
 
     public function services(): BelongsToMany
