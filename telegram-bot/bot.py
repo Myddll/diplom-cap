@@ -28,6 +28,7 @@ logger = logging.getLogger(__name__)
 
 # Токен вашего бота
 TOKEN = os.getenv('TELEGRAM_TOKEN')
+API_URL = os.getenv('API_URL', 'http://localhost')
 
 # Состояния разговора
 (
@@ -344,6 +345,37 @@ def get_db_connection():
         user=os.getenv('POSTGRES_USER'),
         password=os.getenv('POSTGRES_PASSWORD')
     )
+
+# Функция для отправки заказа через API
+async def send_order_to_api(order_data, user_id, username):
+    # Подготовка данных для API
+    payload = {
+        "client_info": f"Telegram user: {username}",
+        "client_tel": order_data.get('phone', 'не указан'),
+        "order_comment": f"Услуга: {order_data.get('service', 'не указана')}. Время: {order_data.get('time', 'не указано')}",
+        "order_date": "не указана",  # Можно добавить логику для даты
+        "services": [
+            {
+                "id": 1,  # ID услуги нужно согласовать с API
+                "quantity": 1
+            }
+        ]
+    }
+    
+    # Добавляем адрес если он есть
+    location = order_data.get('location', {})
+    if location.get('type') == 'address':
+        payload['client_address'] = location.get('address', 'не указан')
+    elif location.get('type') == 'coordinates':
+        payload['client_address'] = f"Координаты: {location.get('latitude')}, {location.get('longitude')}"
+    
+    try:
+        response = requests.post(API_URL, json=payload)
+        response.raise_for_status()
+        return response.json()  # Возвращаем ответ API
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Ошибка при отправке заказа через API: {e}")
+        return None
 
 def main():
     #подключаем бд
