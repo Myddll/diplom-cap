@@ -72,6 +72,22 @@ location_keyboard = ReplyKeyboardMarkup(
     resize_keyboard=True
 )
 
+# Инлайн клавиатура для подтверждения адреса
+def create_address_confirmation_keyboard():
+    return InlineKeyboardMarkup([
+        [
+            InlineKeyboardButton("✅ Подтвердить", callback_data="confirm_address"),
+            InlineKeyboardButton("✏️ Изменить", callback_data="change_address")
+        ]
+    ])
+
+
+# Клавиатура подтверждения
+confirm_keyboard = [
+    ["Подтвердить заказ", "Изменить данные"],
+    ["Отменить заказ"]
+]
+
 async def load_services():
     """Загружает услуги из API и формирует структуру данных"""
     try:
