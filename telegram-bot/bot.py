@@ -641,7 +641,8 @@ async def confirm_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
         api_response = await send_order_to_api()
         
         if api_response:
-            order_number = api_response.get('order_id', 'Номер не получен')
+            '''order_number = api_response.get('order_id', 'Номер не получен')'''
+            order_number = api_response.get('86', 'Номер не получен')
             await update.message.reply_text(
                 f"✅ Заказ #{order_number} успешно оформлен!\n"
                 f"Спасибо за ваш выбор!\n\n"
