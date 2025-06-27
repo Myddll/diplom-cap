@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 # Конфигурация
 TOKEN = os.getenv('TELEGRAM_TOKEN')
-API_URL = os.getenv('API_URL', 'http://localhost/api')
+API_URL = os.getenv('API_URL', 'http://nginx/api')
 SERVICES_API_URL = f"{API_URL}/getServices"
 NEW_ORDER_API_URL = f"{API_URL}/newOrder"
 
