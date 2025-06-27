@@ -451,6 +451,14 @@ async def send_order_to_api():
         logger.error(f"Ошибка при отправке заказа: {e}")
         return None
 
+# Подготовка подтверждения заказа (из инлайн запроса)
+async def confirm_order_step_from_query(query, context):
+    await query.message.reply_text(
+        "Проверьте детали заказа:",
+        reply_markup=ReplyKeyboardMarkup(confirm_keyboard, resize_keyboard=True)
+    )
+    return await show_order_details(query.message, context)
+
 async def confirm_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
     choice = update.message.text
     if choice == "Отменить заказ":
