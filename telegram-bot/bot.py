@@ -463,33 +463,80 @@ async def confirm_order_step_from_query(query, context):
 
 # Показать детали заказа
 async def show_order_details(message, context):
-    order_details = "Детали вашего заказа:\n\n"
+    order_details = "📋 Детали вашего заказа:\n\n"
     
-    # Исправляем ключи для получения данных
+    # Основная услуга
     if 'primary_service' in order_data:
-        order_details += f"Услуга: {order_data['primary_service'].get('name', 'не указана')}\n"
+        service = order_data['primary_service']
+        order_details += f"🔹 Основная услуга: {service.get('name', 'не указана')}\n"
+        order_details += f"   - Стоимость: {service.get('price', 'не указана')}\n"
+        order_details += f"   - Время выполнения: ~{service.get('time', 'не указано')} мин\n\n"
     else:
-        order_details += "Услуга: не указана\n"
+        order_details += "🔹 Основная услуга: не указана\n\n"
     
-    order_details += f"Время: {order_data.get('selected_time', 'не указано')}\n"
-    order_details += f"Телефон: {order_data.get('phone', 'не указан')}\n"
-
+    # Дополнительные услуги
+    if additional_services_selection:
+        order_details += "🔹 Дополнительные услуги:\n"
+        total_additional_price = 0
+        total_additional_time = 0
+        
+        for service_id, quantity in additional_services_selection.items():
+            if quantity > 0:
+                # Находим услугу в данных
+                for service in services_data['all']:
+                    if service['id'] == service_id:
+                        service_price = service.get('price', '0')
+                        service_time = service.get('time', 0)
+                        
+                        # Пытаемся извлечь числовое значение цены
+                        try:
+                            price_num = int(''.join(filter(str.isdigit, service_price)))
+                            total_additional_price += price_num * quantity
+                        except:
+                            pass
+                            
+                        total_additional_time += service_time * quantity
+                        
+                        order_details += f"   - {service['name']} ({service_price}) x{quantity}\n"
+                        break
+        
+        order_details += f"\n   💰 Общая стоимость доп. услуг: {total_additional_price} руб\n"
+        order_details += f"   ⏳ Дополнительное время: ~{total_additional_time} мин\n\n"
+    
+    # Общая информация
+    order_details += f"📅 Время: {order_data.get('selected_time', 'не указано')}\n"
+    order_details += f"📞 Телефон: {order_data.get('phone', 'не указан')}\n"
+    
+    # Адрес
     location = order_data.get('location', {})
     if location.get('type') == 'coordinates':
-        order_details += "Адрес: указан по геолокации\n"
+        order_details += "📍 Адрес: указан по геолокации\n"
         await message.reply_location(
             latitude=location['latitude'],
             longitude=location['longitude']
         )
     elif location.get('type') == 'address':
-        order_details += f"Адрес: {location.get('address', 'не указан')}\n"
+        order_details += f"📍 Адрес: {location.get('address', 'не указан')}\n"
     else:
-        order_details += "Адрес: не указан\n"
-
+        order_details += "📍 Адрес: не указан\n"
+    
+    # Общая стоимость и время (если есть основная услуга)
+    if 'primary_service' in order_data:
+        try:
+            main_price = int(''.join(filter(str.isdigit, order_data['primary_service'].get('price', '0'))))
+            total_price = main_price + total_additional_price
+            total_time = int(order_data['primary_service'].get('time', 0)) + total_additional_time
+            
+            order_details += f"\n💵 Общая стоимость: ~{total_price} руб\n"
+            order_details += f"⏱ Общее время: ~{total_time} мин\n"
+        except:
+            pass
+    
     order_details += "\nВсё верно?"
 
     await message.reply_text(order_details)
     return CONFIRMING_ORDER
+
 
 async def send_order_to_api():
     """Формирует и отправляет заказ в API"""
@@ -515,7 +562,7 @@ async def send_order_to_api():
     order_date = datetime.now().strftime("%Y-%m-%d") + " "
     if "Утро" in order_data.get('selected_time', ''):
         order_date += "09:00"
-    elif "День" in order_data.get('selected_time', ''):  # Исправлено с "День" на "День"
+    elif "День" in order_data.get('selected_time', ''):
         order_date += "12:00"
     elif "Вечер" in order_data.get('selected_time', ''):
         order_date += "15:00"
@@ -531,11 +578,20 @@ async def send_order_to_api():
         "services": services
     }
     
+    headers = {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+    }
+    
     # Добавим логирование для отладки
     logger.info(f"Отправка заказа в API: {payload}")
     
     try:
-        response = requests.post(NEW_ORDER_API_URL, json=payload)
+        response = requests.post(
+            NEW_ORDER_API_URL,
+            json=payload,
+            headers=headers
+        )
         logger.info(f"Ответ API: {response.status_code}, {response.text}")
         response.raise_for_status()
         return response.json()
