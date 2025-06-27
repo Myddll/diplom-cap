@@ -559,7 +559,8 @@ async def send_order_to_api():
             })
     
     # Преобразуем выбранное время в формат даты
-    order_date = datetime.now().strftime("%Y-%m-%d") + " "
+    order_date = datetime.datetime.now() + datetime.timedelta(days=1)
+    order_date = order_date.strftime("%Y-%m-%d") + " "
     if "Утро" in order_data.get('selected_time', ''):
         order_date += "09:00"
     elif "День" in order_data.get('selected_time', ''):
@@ -622,7 +623,7 @@ async def confirm_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"Спасибо за ваш выбор!\n\n"
                 f"Детали заказа:\n"
                 f"Услуга: {order_data['primary_service']['name']}\n"
-                f"Время: {order_data['selected_time']}\n"
+                f"Время: завтра в {order_data['selected_time']}\n"
                 f"Адрес: {order_data.get('location', {}).get('address', 'не указан')}\n\n"
                 f"Наш менеджер свяжется с вами для подтверждения.",
                 reply_markup=ReplyKeyboardRemove()
