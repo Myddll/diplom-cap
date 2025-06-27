@@ -559,7 +559,7 @@ async def send_order_to_api():
             })
     
     # Преобразуем выбранное время в формат даты
-    order_date = datetime.now() + datetime.timedelta(days=1)
+    order_date = datetime.now() + timedelta(days=1)
     order_date = order_date.strftime("%Y-%m-%d") + " "
     if "Утро" in order_data.get('selected_time', ''):
         order_date += "09:00"
