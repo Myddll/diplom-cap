@@ -102,7 +102,7 @@ def create_additional_services_keyboard():
     ])
     return InlineKeyboardMarkup(keyboard)
 
-# Остальные клавиатуры (time_keyboard, contact_keyboard и т.д.) остаются без изменений
+
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
@@ -132,6 +132,18 @@ async def order(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=reply_markup
     )
     return SELECTING_SERVICE
+
+# Обработка инлайн кнопок подтверждения адреса
+async def handle_address_confirmation(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+
+    if query.data == "confirm_address":
+        await query.edit_message_text("Адрес подтверждён!")
+        return await confirm_order_step_from_query(query, context)
+    elif query.data == "change_address":
+        await query.edit_message_text("Пожалуйста, введите адрес уборки:")
+        return MANUAL_ADDRESS
 
 # Получение контакта
 async def get_contact(update: Update, context: ContextTypes.DEFAULT_TYPE):
