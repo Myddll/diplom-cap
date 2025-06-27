@@ -403,6 +403,7 @@ async def get_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     return GETTING_CONTACT
 
+'''
 async def send_order_to_api():
     """Формирует и отправляет заказ в API"""
     # Формируем список услуг
@@ -450,6 +451,7 @@ async def send_order_to_api():
     except Exception as e:
         logger.error(f"Ошибка при отправке заказа: {e}")
         return None
+'''
 
 # Подготовка подтверждения заказа (из инлайн запроса)
 async def confirm_order_step_from_query(query, context):
@@ -462,8 +464,14 @@ async def confirm_order_step_from_query(query, context):
 # Показать детали заказа
 async def show_order_details(message, context):
     order_details = "Детали вашего заказа:\n\n"
-    order_details += f"Услуга: {order_data.get('service', 'не указана')}\n"
-    order_details += f"Время: {order_data.get('time', 'не указано')}\n"
+    
+    # Исправляем ключи для получения данных
+    if 'primary_service' in order_data:
+        order_details += f"Услуга: {order_data['primary_service'].get('name', 'не указана')}\n"
+    else:
+        order_details += "Услуга: не указана\n"
+    
+    order_details += f"Время: {order_data.get('selected_time', 'не указано')}\n"
     order_details += f"Телефон: {order_data.get('phone', 'не указан')}\n"
 
     location = order_data.get('location', {})
@@ -482,6 +490,58 @@ async def show_order_details(message, context):
 
     await message.reply_text(order_details)
     return CONFIRMING_ORDER
+
+async def send_order_to_api():
+    """Формирует и отправляет заказ в API"""
+    # Формируем список услуг
+    services = []
+    
+    # Основная услуга
+    if 'primary_service' in order_data:
+        services.append({
+            "id": order_data['primary_service']['id'],
+            "quantity": 1
+        })
+    
+    # Дополнительные услуги
+    for service_id, quantity in additional_services_selection.items():
+        if quantity > 0:
+            services.append({
+                "id": service_id,
+                "quantity": quantity
+            })
+    
+    # Преобразуем выбранное время в формат даты
+    order_date = datetime.now().strftime("%Y-%m-%d") + " "
+    if "Утро" in order_data.get('selected_time', ''):
+        order_date += "09:00"
+    elif "День" in order_data.get('selected_time', ''):  # Исправлено с "День" на "День"
+        order_date += "12:00"
+    elif "Вечер" in order_data.get('selected_time', ''):
+        order_date += "15:00"
+    else:
+        order_date += "10:00"  # По умолчанию
+    
+    payload = {
+        "client_info": order_data.get('client_name', 'Не указано'),
+        "client_tel": order_data.get('phone', 'Не указан'),
+        "client_address": order_data.get('location', {}).get('address', 'Не указан'),
+        "order_comment": f"Выбранное время: {order_data.get('selected_time', 'Не указано')}",
+        "order_date": order_date,
+        "services": services
+    }
+    
+    # Добавим логирование для отладки
+    logger.info(f"Отправка заказа в API: {payload}")
+    
+    try:
+        response = requests.post(NEW_ORDER_API_URL, json=payload)
+        logger.info(f"Ответ API: {response.status_code}, {response.text}")
+        response.raise_for_status()
+        return response.json()
+    except Exception as e:
+        logger.error(f"Ошибка при отправке заказа: {e}")
+        return None
 
 
 async def confirm_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
