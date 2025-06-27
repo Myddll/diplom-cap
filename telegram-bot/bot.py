@@ -49,7 +49,9 @@ async def load_services():
     """Загружает услуги из API и формирует структуру данных"""
     try:
         response = requests.get(SERVICES_API_URL)
+        print(response)
         response.raise_for_status()
+        print(response.raise_for_status())
         services = response.json()
         
         services_data['all'] = services
@@ -306,8 +308,6 @@ async def confirm_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
         
         return ConversationHandler.END
-
-# Остальные функции (get_contact, get_location и т.д.) остаются аналогичными предыдущей версии
 
 def main():
     application = Application.builder().token(TOKEN).build()
