@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 # Токен вашего бота
 TOKEN = os.getenv('TELEGRAM_TOKEN')
-API_URL = os.getenv('API_URL', 'http://localhost')
+API_URL = os.getenv('APP_URL', 'http://localhost')
 
 # Состояния разговора
 (
