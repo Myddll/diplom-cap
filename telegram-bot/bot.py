@@ -52,6 +52,16 @@ time_keyboard = [
     ["Назад", "Отменить заказ"]
 ]
 
+# Клавиатура для контакта
+contact_keyboard = ReplyKeyboardMarkup(
+    [
+        [KeyboardButton('Отправить контакт ☎️', request_contact=True)],
+        ["Пропустить этот шаг"],
+        ["Отменить заказ"]
+    ],
+    resize_keyboard=True
+)
+
 async def load_services():
     """Загружает услуги из API и формирует структуру данных"""
     try:
