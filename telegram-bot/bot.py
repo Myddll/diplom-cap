@@ -459,6 +459,31 @@ async def confirm_order_step_from_query(query, context):
     )
     return await show_order_details(query.message, context)
 
+# Показать детали заказа
+async def show_order_details(message, context):
+    order_details = "Детали вашего заказа:\n\n"
+    order_details += f"Услуга: {order_data.get('service', 'не указана')}\n"
+    order_details += f"Время: {order_data.get('time', 'не указано')}\n"
+    order_details += f"Телефон: {order_data.get('phone', 'не указан')}\n"
+
+    location = order_data.get('location', {})
+    if location.get('type') == 'coordinates':
+        order_details += "Адрес: указан по геолокации\n"
+        await message.reply_location(
+            latitude=location['latitude'],
+            longitude=location['longitude']
+        )
+    elif location.get('type') == 'address':
+        order_details += f"Адрес: {location.get('address', 'не указан')}\n"
+    else:
+        order_details += "Адрес: не указан\n"
+
+    order_details += "\nВсё верно?"
+
+    await message.reply_text(order_details)
+    return CONFIRMING_ORDER
+
+
 async def confirm_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
     choice = update.message.text
     if choice == "Отменить заказ":
