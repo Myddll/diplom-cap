@@ -111,6 +111,17 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Нажми /order чтобы сделать заказ или /help для справки."
     )
 
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    help_text = """
+    Доступные команды:
+    /start - начать общение
+    /order - заказать уборку
+    /help - показать это сообщение
+
+    Просто нажмите /order и следуйте инструкциям!
+    """
+    await update.message.reply_text(help_text)
+
 async def order(update: Update, context: ContextTypes.DEFAULT_TYPE):
     order_data.clear()
     additional_services_selection.clear()
