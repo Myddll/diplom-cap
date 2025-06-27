@@ -145,6 +145,14 @@ async def handle_address_confirmation(update: Update, context: ContextTypes.DEFA
         await query.edit_message_text("Пожалуйста, введите адрес уборки:")
         return MANUAL_ADDRESS
 
+# Отмена разговора
+async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "Заказ отменён. Если передумаете, нажмите /order",
+        reply_markup=ReplyKeyboardRemove()
+    )
+    return ConversationHandler.END
+
 # Получение контакта
 async def get_contact(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.message.contact:
