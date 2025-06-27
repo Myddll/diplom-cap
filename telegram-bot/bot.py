@@ -481,7 +481,7 @@ async def show_order_details(message, context):
         total_additional_time = 0
         
         for service_id, quantity in additional_services_selection.items():
-            if quantity > 0:
+            if quantity and quantity > 0:  # Проверяем, что quantity существует и > 0
                 # Находим услугу в данных
                 for service in services_data['all']:
                     if service['id'] == service_id:
@@ -490,17 +490,19 @@ async def show_order_details(message, context):
                         
                         # Пытаемся извлечь числовое значение цены
                         try:
-                            price_num = int(''.join(filter(str.isdigit, service_price)))
+                            # Убираем все нецифровые символы, кроме точки
+                            price_str = ''.join(c for c in service_price if c.isdigit() or c == '.')
+                            price_num = float(price_str) if price_str else 0
                             total_additional_price += price_num * quantity
-                        except:
-                            pass
+                        except (ValueError, TypeError):
+                            price_num = 0
                             
-                        total_additional_time += service_time * quantity
+                        total_additional_time += int(service_time) * quantity
                         
                         order_details += f"   - {service['name']} ({service_price}) x{quantity}\n"
                         break
         
-        order_details += f"\n   💰 Общая стоимость доп. услуг: {total_additional_price} руб\n"
+        order_details += f"\n   💰 Общая стоимость доп. услуг: {total_additional_price:.2f} руб\n"
         order_details += f"   ⏳ Дополнительное время: ~{total_additional_time} мин\n\n"
     
     # Общая информация
@@ -523,14 +525,17 @@ async def show_order_details(message, context):
     # Общая стоимость и время (если есть основная услуга)
     if 'primary_service' in order_data:
         try:
-            main_price = int(''.join(filter(str.isdigit, order_data['primary_service'].get('price', '0'))))
+            # Обработка цены основной услуги
+            main_price_str = order_data['primary_service'].get('price', '0')
+            main_price = float(''.join(c for c in main_price_str if c.isdigit() or c == '.')) if main_price_str else 0
             total_price = main_price + total_additional_price
             total_time = int(order_data['primary_service'].get('time', 0)) + total_additional_time
             
-            order_details += f"\n💵 Общая стоимость: ~{total_price} руб\n"
+            order_details += f"\n💵 Общая стоимость: ~{total_price:.2f} руб\n"
             order_details += f"⏱ Общее время: ~{total_time} мин\n"
-        except:
-            pass
+        except Exception as e:
+            logger.error(f"Ошибка при расчете стоимости: {e}")
+            order_details += "\n⚠ Не удалось рассчитать общую стоимость\n"
     
     order_details += "\nВсё верно?"
 
