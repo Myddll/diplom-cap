@@ -362,7 +362,7 @@ async def handle_additional_services(update: Update, context: ContextTypes.DEFAU
         if current > 0:
             additional_services_selection[service_id] = current - 1
 
-    await query.edit_message_reply_markup(reply_markup=create_additional_services_keyboard())
+    '''await query.edit_message_reply_markup(reply_markup=create_additional_services_keyboard())'''
     return SELECTING_ADDITIONAL_SERVICES
 
 async def ask_for_time_from_query(query, context):
