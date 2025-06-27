@@ -199,6 +199,30 @@ async def ask_for_time(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     return SELECTING_TIME
 
+async def get_contact(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.message.contact:
+        order_data['phone'] = update.message.contact.phone_number
+        await update.message.reply_text(
+            "Спасибо за контакт! Теперь укажите адрес уборки:",
+            reply_markup=location_keyboard
+        )
+        return GETTING_LOCATION
+    elif update.message.text == "Пропустить этот шаг":
+        order_data['phone'] = "не указан"
+        await update.message.reply_text(
+            "Теперь укажите адрес уборки:",
+            reply_markup=location_keyboard
+        )
+        return GETTING_LOCATION
+    elif update.message.text == "Отменить заказ":
+        return await cancel(update, context)
+    else:
+        await update.message.reply_text(
+            "Пожалуйста, используйте кнопку для отправки контакта или пропустите этот шаг.",
+            reply_markup=contact_keyboard
+        )
+        return GETTING_CONTACT
+
 async def handle_additional_services(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
