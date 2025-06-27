@@ -192,6 +192,26 @@ async def get_location(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return GETTING_LOCATION
 
+# Обработка ручного ввода адреса
+async def manual_address(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.message.text == "Отменить заказ":
+        return await cancel(update, context)
+
+    address = update.message.text
+    order_data['location'] = {
+        'type': 'address',
+        'address': address
+    }
+
+    # Сохраняем адрес в контексте для подтверждения
+    context.user_data['manual_address'] = address
+
+    await update.message.reply_text(
+        f"Вы ввели адрес:\n{address}\n\nВсё верно?",
+        reply_markup=create_address_confirmation_keyboard()
+    )
+    return CONFIRMING_ORDER
+
 async def select_service(update: Update, context: ContextTypes.DEFAULT_TYPE):
     service_input = update.message.text
     if service_input == "Отменить заказ":
