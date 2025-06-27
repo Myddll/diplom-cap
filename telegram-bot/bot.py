@@ -123,26 +123,32 @@ async def load_services():
         ]
 
 def create_additional_services_keyboard():
-    """Создает клавиатуру для выбора дополнительных услуг"""
+    """Создает клавиатуру для выбора дополнительных услуг с отображением количества"""
     keyboard = []
+    
     for service in services_data['additional']:
-        # Для услуг с is_multiple=True добавляем кнопки +/-
+        current_qty = additional_services_selection.get(service['id'], 0)
+        
         if service.get('is_multiple'):
-            btn_text = f"{service['name']} ({service['price']}) - 0"
+            # Для услуг с множественным выбором - кнопки +/-
+            btn_text = f"{service['name']} ({service['price']}) — {current_qty}"
             keyboard.append([
                 InlineKeyboardButton("➖", callback_data=f"dec_{service['id']}"),
                 InlineKeyboardButton(btn_text, callback_data=f"info_{service['id']}"),
                 InlineKeyboardButton("➕", callback_data=f"inc_{service['id']}")
             ])
         else:
-            # Для одиночных услуг - чекбокс
-            btn_text = f"☑ {service['name']} ({service['price']})" if additional_services_selection.get(service['id']) else f"{service['name']} ({service['price']})"
+            # Для одиночных услуг - чекбокс с галочкой
+            checkbox = "✅" if current_qty else "☐"
+            btn_text = f"{checkbox} {service['name']} ({service['price']})"
             keyboard.append([InlineKeyboardButton(btn_text, callback_data=f"toggle_{service['id']}")])
     
+    # Кнопки подтверждения/отмены внизу
     keyboard.append([
-        InlineKeyboardButton("✅ Продолжить", callback_data="continue"),
-        InlineKeyboardButton("❌ Отменить", callback_data="cancel")
+        InlineKeyboardButton("🔷 Подтвердить выбор", callback_data="continue"),
+        InlineKeyboardButton("❌ Отменить заказ", callback_data="cancel")
     ])
+    
     return InlineKeyboardMarkup(keyboard)
 
 
@@ -541,7 +547,7 @@ async def show_order_details(message, context):
 
     await message.reply_text(order_details)
     return CONFIRMING_ORDER
-
+    
 
 async def send_order_to_api():
     """Формирует и отправляет заказ в API"""
