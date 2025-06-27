@@ -244,7 +244,7 @@
                     <h3>{{ $service->name }}</h3>
                     <div>
                         @if($service->is_multiple)
-                            <label for="service_{{ $service->id }}">Количество</label>
+                            <label for="service_{{ $service->id }}">Квадратура</label>
                             <input type="number" id="service_{{ $service->id }}" min="0" max="500"
                                    data-price="{{ $service->price }}" data-time="{{ $service->time }}"
                                    class="quantity-input" value="0" data-service-id="{{ $service->id }}">
