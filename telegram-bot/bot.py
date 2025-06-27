@@ -1,6 +1,7 @@
 import os
 import psycopg2
 import logging
+import requests
 from telegram import (
     Update,
     ReplyKeyboardMarkup,
@@ -28,7 +29,8 @@ logger = logging.getLogger(__name__)
 
 # Токен вашего бота
 TOKEN = os.getenv('TELEGRAM_TOKEN')
-API_URL = os.getenv('APP_URL', 'http://localhost')
+# URL API для сохранения заказов
+API_URL = os.getenv('API_URL', 'http://your-api-url.com/api/orders')
 
 # Состояния разговора
 (
@@ -115,6 +117,8 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # Начало заказа
 async def order(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Очищаем данные предыдущего заказа
+    order_data.clear()
     reply_markup = ReplyKeyboardMarkup(services_keyboard, one_time_keyboard=True, resize_keyboard=True)
     await update.message.reply_text(
         "Выберите тип уборки:",
@@ -306,46 +310,6 @@ async def show_order_details(message, context):
     return CONFIRMING_ORDER
 
 
-# Подтверждение заказа
-async def confirm_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    choice = update.message.text
-    if choice == "Отменить заказ":
-        return await cancel(update, context)
-    elif choice == "Изменить данные":
-        reply_markup = ReplyKeyboardMarkup(services_keyboard, one_time_keyboard=True, resize_keyboard=True)
-        await update.message.reply_text(
-            "Выберите тип уборки:",
-            reply_markup=reply_markup
-        )
-        return SELECTING_SERVICE
-    elif choice == "Подтвердить заказ":
-        # Здесь можно добавить логику сохранения заказа в БД
-        await update.message.reply_text(
-            "Спасибо за заказ! Наш менеджер свяжется с вами в ближайшее время.\n"
-            "Номер вашего заказа: #12345\n"
-            "Если хотите сделать ещё один заказ, нажмите /order",
-            reply_markup=ReplyKeyboardRemove()
-        )
-        return ConversationHandler.END
-
-
-# Отмена разговора
-async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "Заказ отменён. Если передумаете, нажмите /order",
-        reply_markup=ReplyKeyboardRemove()
-    )
-    return ConversationHandler.END
-
-
-def get_db_connection():
-    return psycopg2.connect(
-        host="postgres",  # имя сервиса в docker-compose
-        database=os.getenv('POSTGRES_DB'),
-        user=os.getenv('POSTGRES_USER'),
-        password=os.getenv('POSTGRES_PASSWORD')
-    )
-
 # Функция для отправки заказа через API
 async def send_order_to_api(order_data, user_id, username):
     # Подготовка данных для API
@@ -377,17 +341,55 @@ async def send_order_to_api(order_data, user_id, username):
         logger.error(f"Ошибка при отправке заказа через API: {e}")
         return None
 
-def main():
-    #подключаем бд
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT version();")
-        print("PostgreSQL version:", cursor.fetchone())
-    finally:
-        if conn:
-            conn.close()
 
+# Подтверждение заказа
+async def confirm_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    choice = update.message.text
+    if choice == "Отменить заказ":
+        return await cancel(update, context)
+    elif choice == "Изменить данные":
+        reply_markup = ReplyKeyboardMarkup(services_keyboard, one_time_keyboard=True, resize_keyboard=True)
+        await update.message.reply_text(
+            "Выберите тип уборки:",
+            reply_markup=reply_markup
+        )
+        return SELECTING_SERVICE
+    elif choice == "Подтвердить заказ":
+        # Отправляем заказ через API
+        user = update.effective_user
+        api_response = await send_order_to_api(
+            order_data,
+            user.id,
+            user.username or user.first_name
+        )
+        
+        if api_response:
+            order_number = api_response.get('order_id', '12345')  # Пример, нужно адаптировать под ваш API
+            await update.message.reply_text(
+                f"Спасибо за заказ! Наш менеджер свяжется с вами в ближайшее время.\n"
+                f"Номер вашего заказа: #{order_number}\n"
+                "Если хотите сделать ещё один заказ, нажмите /order",
+                reply_markup=ReplyKeyboardRemove()
+            )
+        else:
+            await update.message.reply_text(
+                "Произошла ошибка при обработке вашего заказа. Пожалуйста, попробуйте позже.",
+                reply_markup=ReplyKeyboardRemove()
+            )
+        
+        return ConversationHandler.END
+
+
+# Отмена разговора
+async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "Заказ отменён. Если передумаете, нажмите /order",
+        reply_markup=ReplyKeyboardRemove()
+    )
+    return ConversationHandler.END
+
+
+def main():
     # Создаем приложение и передаем токен бота
     application = Application.builder().token(TOKEN).build()
 
@@ -422,7 +424,6 @@ def main():
 
     # Запускаем бота
     application.run_polling()
-#7561126039:Z5ztc28lD8AimtLJGx9I2wLpTm1
 
 
 if __name__ == "__main__":
