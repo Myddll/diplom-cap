@@ -62,6 +62,16 @@ contact_keyboard = ReplyKeyboardMarkup(
     resize_keyboard=True
 )
 
+# Клавиатура для локации
+location_keyboard = ReplyKeyboardMarkup(
+    [
+        [KeyboardButton('Отправить локацию 🗺️', request_location=True) ,"Ввести адрес вручную"],
+        ["Пропустить этот шаг"],
+        ["Отменить заказ"]
+    ],
+    resize_keyboard=True
+)
+
 async def load_services():
     """Загружает услуги из API и формирует структуру данных"""
     try:
