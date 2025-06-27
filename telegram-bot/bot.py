@@ -1,7 +1,7 @@
 import os
 import logging
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
 from telegram import (
     Update,
     ReplyKeyboardMarkup,
