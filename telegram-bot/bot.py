@@ -351,25 +351,38 @@ async def handle_additional_services(update: Update, context: ContextTypes.DEFAU
     await query.answer()
 
     if query.data == "continue":
-        await query.edit_message_text("Дополнительные услуги выбраны!")
-        return await ask_for_time_from_query(query, context)
+        # Проверяем, что выбрана хотя бы одна услуга (основная уже есть)
+        if any(qty > 0 for qty in additional_services_selection.values()):
+            await query.edit_message_text("✅ Дополнительные услуги выбраны!")
+            return await ask_for_time_from_query(query, context)
+        else:
+            # Если ничего не выбрано, предлагаем продолжить без доп. услуг
+            await query.answer("Вы не выбрали дополнительные услуги. Нажмите ещё раз чтобы продолжить.", show_alert=True)
+            return SELECTING_ADDITIONAL_SERVICES
+            
     elif query.data == "cancel":
-        await query.edit_message_text("Выбор услуг отменен.")
+        await query.edit_message_text("❌ Выбор услуг отменен.")
         return await cancel_from_query(query, context)
+        
     elif query.data.startswith("toggle_"):
         service_id = int(query.data.split("_")[1])
-        additional_services_selection[service_id] = not additional_services_selection.get(service_id, False)
+        # Для одиночных услуг переключаем между 0 и 1
+        additional_services_selection[service_id] = 1 if not additional_services_selection.get(service_id, 0) else 0
+        
     elif query.data.startswith("inc_"):
         service_id = int(query.data.split("_")[1])
         additional_services_selection[service_id] = additional_services_selection.get(service_id, 0) + 1
+        
     elif query.data.startswith("dec_"):
         service_id = int(query.data.split("_")[1])
         current = additional_services_selection.get(service_id, 0)
         if current > 0:
             additional_services_selection[service_id] = current - 1
 
-    '''await query.edit_message_reply_markup(reply_markup=create_additional_services_keyboard())'''
+    # Обновляем клавиатуру с новыми значениями
+    await query.edit_message_reply_markup(reply_markup=create_additional_services_keyboard())
     return SELECTING_ADDITIONAL_SERVICES
+
 
 async def ask_for_time_from_query(query, context):
     await query.message.reply_text(
