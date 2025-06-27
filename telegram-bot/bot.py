@@ -158,6 +158,40 @@ async def get_contact(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return GETTING_CONTACT
 
+async def get_location(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.message.location:
+        order_data['location'] = {
+            'type': 'coordinates',
+            'latitude': update.message.location.latitude,
+            'longitude': update.message.location.longitude
+        }
+        await update.message.reply_text(
+            "Локация получена! Спасибо.",
+            reply_markup=ReplyKeyboardRemove()
+        )
+        return await confirm_order_step(update, context)
+    elif update.message.text == "Ввести адрес вручную":
+        await update.message.reply_text(
+            "Пожалуйста, введите адрес уборки:",
+            reply_markup=ReplyKeyboardMarkup([["Отменить заказ"]], resize_keyboard=True)
+        )
+        return MANUAL_ADDRESS
+    elif update.message.text == "Пропустить этот шаг":
+        order_data['location'] = {'type': 'не указан'}
+        await update.message.reply_text(
+            "Хорошо, адрес не указан.",
+            reply_markup=ReplyKeyboardRemove()
+        )
+        return await confirm_order_step(update, context)
+    elif update.message.text == "Отменить заказ":
+        return await cancel(update, context)
+    else:
+        await update.message.reply_text(
+            "Пожалуйста, используйте кнопки для указания адреса.",
+            reply_markup=location_keyboard
+        )
+        return GETTING_LOCATION
+
 async def select_service(update: Update, context: ContextTypes.DEFAULT_TYPE):
     service_input = update.message.text
     if service_input == "Отменить заказ":
