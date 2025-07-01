@@ -46,7 +46,7 @@ class ExportController extends Controller
                         $order->client_info,
                         $order->client_tel,
                         $order->client_address,
-                        $order->status,
+                        $order->getStatusText(),
                         $order->order_date,
                         $order->created_at,
                         $order->updated_at,
